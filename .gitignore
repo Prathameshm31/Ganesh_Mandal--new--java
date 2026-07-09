@@ -1,0 +1,10 @@
+bin/
+target/
+.settings/
+.classpath
+.project
+.factorypath
+.sts*
+.springBeans
+.DS_Store
+Thumbs.db

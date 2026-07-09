@@ -1,0 +1,25 @@
+node_modules
+dist
+.vite
+*.local
+
+# Java / Maven / Eclipse
+**/bin/
+**/target/
+**/.settings/
+**/.classpath
+**/.project
+**/.factorypath
+**/.sts*
+**/.springBeans
+
+# Environment files
+.env
+**/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Empty dirs
+Ganesh/

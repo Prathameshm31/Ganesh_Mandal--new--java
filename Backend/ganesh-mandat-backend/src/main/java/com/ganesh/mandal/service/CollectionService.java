@@ -2,13 +2,16 @@ package com.ganesh.mandal.service;
 
 import com.ganesh.mandal.dto.CollectionDTO;
 import com.ganesh.mandal.dto.CollectionSummaryDTO;
+import com.ganesh.mandal.dto.NotificationRequest;
 import com.ganesh.mandal.entity.Collection;
 import com.ganesh.mandal.entity.Member;
 import com.ganesh.mandal.entity.PaymentMode;
+import com.ganesh.mandal.event.NotificationEvent;
 import com.ganesh.mandal.exception.ResourceNotFoundException;
 import com.ganesh.mandal.repository.CollectionRepository;
 import com.ganesh.mandal.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +31,7 @@ public class CollectionService {
 
     private final CollectionRepository collectionRepository;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<CollectionDTO> getAllCollections() {
@@ -73,7 +77,9 @@ public class CollectionService {
                 .build();
 
         Collection saved = collectionRepository.save(collection);
-        return toDTO(saved);
+        CollectionDTO result = toDTO(saved);
+        publishDonationNotifications(result, member);
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -188,5 +194,41 @@ public class CollectionService {
                 .remarks(collection.getRemarks())
                 .createdAt(collection.getCreatedAt())
                 .build();
+    }
+
+    private void publishDonationNotifications(CollectionDTO collection, Member member) {
+        String donorMobile = member.getMobile();
+        String donorEmail = member.getEmail();
+        String amount = collection.getAmount() != null ? collection.getAmount().toString() : "";
+        String mode = collection.getPaymentMode() != null ? collection.getPaymentMode() : "";
+        String date = collection.getCollectionDate() != null ? collection.getCollectionDate().toString() : "";
+
+        if (donorMobile != null && !donorMobile.isBlank()) {
+            NotificationRequest donorReq = NotificationRequest.builder()
+                    .notificationType("Donation")
+                    .receivers(List.of(donorMobile))
+                    .channels(List.of("WhatsApp"))
+                    .donorName(member.getName())
+                    .amount(amount)
+                    .paymentMode(mode)
+                    .date(date)
+                    .build();
+            eventPublisher.publishEvent(new NotificationEvent(this, donorReq));
+        }
+
+        List<String> adminReceivers = new java.util.ArrayList<>();
+        if (donorEmail != null && !donorEmail.isBlank()) adminReceivers.add(donorEmail);
+        if (!adminReceivers.isEmpty()) {
+            NotificationRequest adminReq = NotificationRequest.builder()
+                    .notificationType("Donation_Admin")
+                    .receivers(adminReceivers)
+                    .channels(List.of("Email"))
+                    .donorName(member.getName())
+                    .amount(amount)
+                    .paymentMode(mode)
+                    .date(date)
+                    .build();
+            eventPublisher.publishEvent(new NotificationEvent(this, adminReq));
+        }
     }
 }

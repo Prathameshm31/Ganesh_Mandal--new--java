@@ -7,10 +7,14 @@ import {
   TextField,
   Button,
   Grid,
+  Switch,
+  FormControlLabel,
+  Divider,
 } from '@mui/material';
-import { MdSave } from 'react-icons/md';
+import { MdSave, MdNotifications } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import settingService from '../../services/settingService';
+import { getNotificationConfig, updateNotificationConfig } from '../../services/notificationService';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
 export default function Settings() {
@@ -40,6 +44,20 @@ export default function Settings() {
   const [upi, setUpi] = useState({ upiId: 'ganeshmandal@upi' });
   const [collectionGoal, setCollectionGoal] = useState('1000000');
 
+  const [notifConfig, setNotifConfig] = useState({
+    whatsappEnabled: false,
+    emailEnabled: false,
+    senderName: '',
+    senderEmail: '',
+    senderWhatsapp: '',
+    smtpHost: '',
+    smtpPort: '',
+    smtpUsername: '',
+    smtpPassword: '',
+    whatsappApiKey: '',
+    whatsappApiUrl: '',
+  });
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -61,6 +79,26 @@ export default function Settings() {
       if (settings.branch) setBank(prev => ({ ...prev, branch: settings.branch }));
       if (settings.upi_id) setUpi({ upiId: settings.upi_id });
       if (settings.collection_goal) setCollectionGoal(settings.collection_goal);
+    } catch {
+      // use defaults
+    }
+    try {
+      const nc = await getNotificationConfig();
+      if (nc) {
+        setNotifConfig({
+          whatsappEnabled: nc.whatsappEnabled || false,
+          emailEnabled: nc.emailEnabled || false,
+          senderName: nc.senderName || '',
+          senderEmail: nc.senderEmail || '',
+          senderWhatsapp: nc.senderWhatsapp || '',
+          smtpHost: nc.smtpHost || '',
+          smtpPort: nc.smtpPort || '',
+          smtpUsername: nc.smtpUsername || '',
+          smtpPassword: nc.smtpPassword || '',
+          whatsappApiKey: nc.whatsappApiKey || '',
+          whatsappApiUrl: nc.whatsappApiUrl || '',
+        });
+      }
     } catch {
       // use defaults
     } finally {
@@ -88,6 +126,19 @@ export default function Settings() {
         collection_goal: collectionGoal,
       };
       await settingService.updateSettings(settings);
+      await updateNotificationConfig({
+        whatsappEnabled: notifConfig.whatsappEnabled,
+        emailEnabled: notifConfig.emailEnabled,
+        senderName: notifConfig.senderName,
+        senderEmail: notifConfig.senderEmail,
+        senderWhatsapp: notifConfig.senderWhatsapp,
+        smtpHost: notifConfig.smtpHost,
+        smtpPort: notifConfig.smtpPort ? Number(notifConfig.smtpPort) : null,
+        smtpUsername: notifConfig.smtpUsername,
+        smtpPassword: notifConfig.smtpPassword,
+        whatsappApiKey: notifConfig.whatsappApiKey,
+        whatsappApiUrl: notifConfig.whatsappApiUrl,
+      });
       toast.success('Settings saved successfully');
     } catch (err) {
       toast.error(err.message || 'Failed to save settings');
@@ -183,6 +234,59 @@ export default function Settings() {
                   helperText="Set the annual collection target amount in rupees"
                 />
               </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <MdNotifications size={24} />
+                <Typography variant="h6" fontWeight={600}>Notification Settings</Typography>
+              </Box>
+              <Divider sx={{ mb: 2 }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel control={<Switch checked={notifConfig.whatsappEnabled} onChange={(e) => setNotifConfig((p) => ({ ...p, whatsappEnabled: e.target.checked }))} />} label="Enable WhatsApp Notifications" />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControlLabel control={<Switch checked={notifConfig.emailEnabled} onChange={(e) => setNotifConfig((p) => ({ ...p, emailEnabled: e.target.checked }))} />} label="Enable Email Notifications" />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField label="Sender Name" value={notifConfig.senderName} onChange={(e) => setNotifConfig((p) => ({ ...p, senderName: e.target.value }))} fullWidth helperText="Display name in messages" />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField label="Sender Email" value={notifConfig.senderEmail} onChange={(e) => setNotifConfig((p) => ({ ...p, senderEmail: e.target.value }))} fullWidth helperText="From email address" />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <TextField label="Sender WhatsApp Number" value={notifConfig.senderWhatsapp} onChange={(e) => setNotifConfig((p) => ({ ...p, senderWhatsapp: e.target.value }))} fullWidth helperText="WhatsApp sender number" />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mt: 1, mb: 1 }}>SMTP Configuration</Typography>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField label="SMTP Host" value={notifConfig.smtpHost} onChange={(e) => setNotifConfig((p) => ({ ...p, smtpHost: e.target.value }))} fullWidth />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField label="SMTP Port" type="number" value={notifConfig.smtpPort} onChange={(e) => setNotifConfig((p) => ({ ...p, smtpPort: e.target.value }))} fullWidth />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField label="SMTP Username" value={notifConfig.smtpUsername} onChange={(e) => setNotifConfig((p) => ({ ...p, smtpUsername: e.target.value }))} fullWidth />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField label="SMTP Password" type="password" value={notifConfig.smtpPassword} onChange={(e) => setNotifConfig((p) => ({ ...p, smtpPassword: e.target.value }))} fullWidth />
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mt: 1, mb: 1 }}>WhatsApp API Configuration</Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField label="WhatsApp API URL" value={notifConfig.whatsappApiUrl} onChange={(e) => setNotifConfig((p) => ({ ...p, whatsappApiUrl: e.target.value }))} fullWidth />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField label="WhatsApp API Key" type="password" value={notifConfig.whatsappApiKey} onChange={(e) => setNotifConfig((p) => ({ ...p, whatsappApiKey: e.target.value }))} fullWidth />
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>

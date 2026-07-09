@@ -1,10 +1,15 @@
 package com.ganesh.mandal.service;
 
 import com.ganesh.mandal.dto.EventDTO;
+import com.ganesh.mandal.dto.NotificationRequest;
 import com.ganesh.mandal.entity.Event;
+import com.ganesh.mandal.entity.Member;
+import com.ganesh.mandal.event.NotificationEvent;
 import com.ganesh.mandal.repository.EventRepository;
+import com.ganesh.mandal.repository.MemberRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +23,16 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public EventDTO create(EventDTO dto) {
         Event entity = toEntity(dto);
-        return toDTO(eventRepository.save(entity));
+        Event saved = eventRepository.save(entity);
+        EventDTO result = toDTO(saved);
+        publishEventNotification(result);
+        return result;
     }
 
     @Transactional
@@ -105,5 +115,22 @@ public class EventService {
                 .organizer(dto.getOrganizer()).coordinator(dto.getCoordinator())
                 .budget(dto.getBudget()).status(dto.getStatus() != null ? dto.getStatus() : "Planned")
                 .build();
+    }
+
+    private void publishEventNotification(EventDTO event) {
+        List<Member> members = memberRepository.findAll();
+        List<String> receivers = members.stream()
+                .map(Member::getMobile)
+                .filter(m -> m != null && !m.isBlank())
+                .collect(Collectors.toList());
+        if (receivers.isEmpty()) return;
+
+        NotificationRequest req = NotificationRequest.builder()
+                .notificationType("Event_Creation")
+                .receivers(receivers)
+                .channels(List.of("WhatsApp"))
+                .eventId(event.getId())
+                .build();
+        eventPublisher.publishEvent(new NotificationEvent(this, req));
     }
 }

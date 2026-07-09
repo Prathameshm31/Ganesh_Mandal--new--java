@@ -1,14 +1,18 @@
 package com.ganesh.mandal.service;
 
 import com.ganesh.mandal.dto.MemberDTO;
+import com.ganesh.mandal.dto.NotificationRequest;
 import com.ganesh.mandal.entity.Member;
+import com.ganesh.mandal.event.NotificationEvent;
 import com.ganesh.mandal.exception.ResourceNotFoundException;
 import com.ganesh.mandal.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,6 +22,7 @@ import java.util.stream.Stream;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<MemberDTO> getAllMembers() {
@@ -38,7 +43,9 @@ public class MemberService {
     public MemberDTO createMember(MemberDTO dto) {
         Member member = toEntity(dto);
         Member saved = memberRepository.save(member);
-        return toDTO(saved);
+        MemberDTO result = toDTO(saved);
+        publishRegistrationNotification(result);
+        return result;
     }
 
     @Transactional
@@ -141,5 +148,38 @@ public class MemberService {
                 .joinDate(dto.getJoinDate() != null ? dto.getJoinDate() : LocalDate.now())
                 .lastYearAmount(dto.getLastYearAmount())
                 .build();
+    }
+
+    private void publishRegistrationNotification(MemberDTO member) {
+        List<String> receivers = new ArrayList<>();
+        List<String> channels = new ArrayList<>();
+
+        if (member.getMobile() != null && !member.getMobile().isBlank()) {
+            String mobile = member.getMobile();
+            if (!mobile.contains("@")) {
+                receivers.add(mobile);
+                channels.add("WhatsApp");
+            }
+        }
+        if (member.getEmail() != null && !member.getEmail().isBlank()) {
+            receivers.add(member.getEmail());
+            channels.add("Email");
+        }
+
+        if (receivers.isEmpty()) return;
+
+        NotificationRequest req = NotificationRequest.builder()
+                .notificationType("Registration")
+                .receivers(receivers)
+                .channels(channels)
+                .donorName(member.getName())
+                .amount(member.getMobile())
+                .userId(member.getId())
+                .email(member.getEmail())
+                .logoUrl(null)
+                .bannerUrl(null)
+                .websiteUrl("http://localhost:5173")
+                .build();
+        eventPublisher.publishEvent(new NotificationEvent(this, req));
     }
 }

@@ -16,6 +16,7 @@ dist
 # Environment files
 .env
 **/.env
+**/application.properties
 
 # OS
 .DS_Store

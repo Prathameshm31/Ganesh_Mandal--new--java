@@ -1,13 +1,11 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import api from '../services/api';
 
 const AuthContext = createContext(null);
 
-// TEMPORARY: Set VITE_SKIP_AUTH=true in .env to bypass login for testing.
-// Revert by setting VITE_SKIP_AUTH=false or removing it from .env.
-const SKIP_AUTH = import.meta.env.VITE_SKIP_AUTH === 'true';
-
-const MOCK_USER = { id: 1, username: 'admin', name: 'Admin User', role: 'admin' };
+const USERS = {
+  admin: { id: 1, username: 'admin', name: 'Admin User', role: 'admin', password: 'admin123' },
+  user:  { id: 2, username: 'user', name: 'Regular User', role: 'user', password: 'user123' },
+};
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
@@ -19,7 +17,6 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    if (SKIP_AUTH) return MOCK_USER;
     try {
       const stored = localStorage.getItem('ganeshMandalAuthUser');
       return stored ? JSON.parse(stored) : null;
@@ -41,19 +38,13 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   const login = useCallback(async (username, password) => {
-    if (SKIP_AUTH) {
-      setUser(MOCK_USER);
-      return MOCK_USER;
+    const matched = USERS[username];
+    if (!matched || matched.password !== password) {
+      throw new Error('Invalid username or password');
     }
-    try {
-      const response = await api.post('/auth/login', { username, password });
-      const userData = response.data;
-      setUser(userData);
-      return userData;
-    } catch (err) {
-      const message = err.response?.data?.message || 'Invalid username or password';
-      throw new Error(message);
-    }
+    const { password: _, ...userData } = matched;
+    setUser(userData);
+    return userData;
   }, []);
 
   const logout = useCallback(() => {

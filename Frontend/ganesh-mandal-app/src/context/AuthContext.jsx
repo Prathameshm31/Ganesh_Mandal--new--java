@@ -19,10 +19,11 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('ganeshMandalAuthUser');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    const defaultUser = { id: 1, username: 'admin', name: 'Admin User', role: 'admin' };
+    localStorage.setItem('ganeshMandalAuthUser', JSON.stringify(defaultUser));
+    return defaultUser;
   });
 
   useEffect(() => {

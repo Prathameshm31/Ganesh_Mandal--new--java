@@ -125,7 +125,7 @@ public class NotificationService {
 
     private String buildRegistrationEmail(NotificationRequest request) {
         String name = request.getDonorName() != null ? request.getDonorName() : "Valued Member";
-        String mobile = request.getAmount() != null ? request.getAmount() : "";
+        String mobile = request.getMobile() != null ? request.getMobile() : "";
         Long memberId = request.getUserId();
         String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://placehold.co/180x60/1a1a2e/ff9933?text=Hindavi+Swarajya";
         String bannerUrl = request.getBannerUrl() != null ? request.getBannerUrl() : "https://placehold.co/600x250/ff9933/ffffff?text=Ganesh+Festival";
@@ -407,18 +407,18 @@ public class NotificationService {
         String amount = request.getAmount() != null ? request.getAmount() : "0";
         String mode = request.getPaymentMode() != null ? request.getPaymentMode() : "";
         String date = request.getDate() != null ? request.getDate() : "";
-        return String.format("""
+        return """
             <h2 style="color:#d32f2f;">🙏 Thank You For Your Donation</h2>
             <p>Donation Received Successfully.</p>
             <table style="border:1px solid #ddd; border-radius:8px; padding:15px; background:#fef9f0;">
-                <tr><td><strong>Name:</strong></td><td>%%s</td></tr>
-                <tr><td><strong>Amount:</strong></td><td>₹%%s</td></tr>
-                <tr><td><strong>Mode:</strong></td><td>%%s</td></tr>
-                <tr><td><strong>Date:</strong></td><td>%%s</td></tr>
+                <tr><td><strong>Name:</strong></td><td>%s</td></tr>
+                <tr><td><strong>Amount:</strong></td><td>₹%s</td></tr>
+                <tr><td><strong>Mode:</strong></td><td>%s</td></tr>
+                <tr><td><strong>Date:</strong></td><td>%s</td></tr>
             </table>
             <p>Your contribution helps us organize the festival successfully.</p>
             <p>- Hindavi Swarajya Team</p>
-            """.formatted(name, amount, mode, date));
+            """.formatted(name, amount, mode, date);
     }
 
     private String buildDonationAdminWhatsApp(NotificationRequest request) {
@@ -428,11 +428,11 @@ public class NotificationService {
     private String buildDonationAdminEmail(NotificationRequest request) {
         String name = request.getDonorName() != null ? request.getDonorName() : "Donor";
         String amount = request.getAmount() != null ? request.getAmount() : "0";
-        return String.format("""
+        return """
             <h2>New Donation Received</h2>
-            <p>Donor Name: %%s</p>
-            <p>Amount: ₹%%s</p>
-            """.formatted(name, amount));
+            <p>Donor Name: %s</p>
+            <p>Amount: ₹%s</p>
+            """.formatted(name, amount);
     }
 
     @Transactional

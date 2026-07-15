@@ -173,7 +173,7 @@ public class MemberService {
                 .receivers(receivers)
                 .channels(channels)
                 .donorName(member.getName())
-                .amount(member.getMobile())
+                .mobile(member.getMobile())
                 .userId(member.getId())
                 .email(member.getEmail())
                 .logoUrl(null)

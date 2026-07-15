@@ -117,6 +117,12 @@ public class VolunteerService {
 
     public List<VolunteerDTO> searchFiltered(String keyword, List<String> roles, String category, String role,
                                               String status, String festivalYear, String assignedDate, Integer birthdayMonth) {
+        Set<Long> assignedVolunteerIds = null;
+        if (assignedDate != null) {
+            LocalDate date = LocalDate.parse(assignedDate);
+            assignedVolunteerIds = assignmentRepository.findVolunteerIdsByDutyDate(date);
+        }
+        Set<Long> finalAssignedVolunteerIds = assignedVolunteerIds;
         return volunteerRepository.findAll().stream()
                 .filter(v -> festivalYear == null || festivalYear.equals(v.getFestivalYear()))
                 .filter(v -> category == null || v.getCategory() != null && v.getCategory().equalsIgnoreCase(category))
@@ -124,8 +130,7 @@ public class VolunteerService {
                 .filter(v -> status == null || v.getStatus() != null && v.getStatus().equalsIgnoreCase(status))
                 .filter(v -> roles == null || roles.isEmpty() || (v.getRole() != null && roles.contains(v.getRole())))
                 .filter(v -> birthdayMonth == null || (v.getDateOfBirth() != null && v.getDateOfBirth().getMonthValue() == birthdayMonth))
-                .filter(v -> assignedDate == null || assignmentRepository.findByVolunteerId(v.getId()).stream()
-                        .anyMatch(a -> a.getDutyDate() != null && a.getDutyDate().toString().equals(assignedDate)))
+                .filter(v -> finalAssignedVolunteerIds == null || finalAssignedVolunteerIds.contains(v.getId()))
                 .filter(v -> keyword == null || keyword.isBlank() ||
                         (v.getName() != null && v.getName().toLowerCase().contains(keyword.toLowerCase())) ||
                         (v.getMobile() != null && v.getMobile().contains(keyword)) ||

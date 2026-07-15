@@ -25,6 +25,7 @@ public class NotificationRequest {
     private String paymentMode;
     private String date;
     private String email;
+    private String mobile;
     private String logoUrl;
     private String bannerUrl;
     private String websiteUrl;

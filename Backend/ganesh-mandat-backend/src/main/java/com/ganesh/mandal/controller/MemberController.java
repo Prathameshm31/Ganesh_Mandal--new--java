@@ -49,7 +49,23 @@ public class MemberController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String colony,
-            @RequestParam(required = false) String occupation) {
-        return ResponseEntity.ok(memberService.filterMembers(keyword, status, colony, occupation));
+            @RequestParam(required = false) String occupation,
+            @RequestParam(required = false) String festivalYear,
+            @RequestParam(required = false) String committeeCategory,
+            @RequestParam(required = false) Long roleId) {
+        return ResponseEntity.ok(memberService.filterMembers(keyword, status, colony, occupation, festivalYear, committeeCategory, roleId));
+    }
+
+    @GetMapping("/by-role/{roleId}")
+    public ResponseEntity<List<MemberDTO>> getMembersByRole(@PathVariable Long roleId) {
+        return ResponseEntity.ok(memberService.getMembersByRole(roleId));
+    }
+
+    @PutMapping("/{id}/assign-role/{roleId}")
+    public ResponseEntity<Void> assignRole(@PathVariable Long id, @PathVariable Long roleId) {
+        MemberDTO dto = memberService.getMemberById(id);
+        dto.setRoleId(roleId);
+        memberService.updateMember(id, dto);
+        return ResponseEntity.ok().build();
     }
 }

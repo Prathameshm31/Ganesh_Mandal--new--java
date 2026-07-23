@@ -2,6 +2,9 @@ package com.ganesh.mandal.controller;
 
 import com.ganesh.mandal.dto.LoginRequest;
 import com.ganesh.mandal.dto.LoginResponse;
+import com.ganesh.mandal.entity.User;
+import com.ganesh.mandal.repository.UserRepository;
+import com.ganesh.mandal.service.AuthorizationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -20,15 +24,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private static final Map<String, User> USERS = Map.of(
-        "admin", new User(1L, "admin", "Admin User", "admin", "admin123"),
-        "user", new User(2L, "user", "Regular User", "user", "user123")
-    );
+    private final UserRepository userRepository;
+    private final AuthorizationService authorizationService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        User matched = USERS.get(request.getUsername());
-        if (matched == null || !matched.password.equals(request.getPassword())) {
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
+        if (user == null || !user.getPassword().equals(request.getPassword())) {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("timestamp", LocalDateTime.now());
             body.put("status", HttpStatus.UNAUTHORIZED.value());
@@ -37,15 +39,16 @@ public class AuthController {
             return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
         }
 
+        List<String> permissions = authorizationService.getUserPermissions(user.getId());
+
         LoginResponse response = LoginResponse.builder()
-                .id(matched.id)
-                .username(matched.username)
-                .name(matched.name)
-                .role(matched.role)
+                .id(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .role(user.getStatus())
+                .permissions(permissions)
                 .build();
 
         return ResponseEntity.ok(response);
     }
-
-    private record User(Long id, String username, String name, String role, String password) {}
 }

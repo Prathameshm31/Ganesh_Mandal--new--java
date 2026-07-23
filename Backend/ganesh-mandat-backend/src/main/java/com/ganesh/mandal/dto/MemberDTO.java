@@ -9,12 +9,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class MemberDTO {
 
     private Long id;
@@ -54,6 +51,20 @@ public class MemberDTO {
     private LocalDate joinDate;
 
     private BigDecimal lastYearAmount;
+
+    private String festivalYear;
+
+    private String committeeCategory;
+
+    private Long userId;
+
+    private Long roleId;
+
+    private String username;
+
+    private String password;
+
+    private List<String> roles;
 
     private LocalDateTime createdAt;
 }

@@ -12,23 +12,16 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "members")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Member {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
-    @Column(nullable = false, length = 100)
+    @NotBlank @Column(nullable = false, length = 100)
     private String name;
 
-    @NotBlank(message = "Mobile number is required")
-    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be 10 digits")
+    @NotBlank @Pattern(regexp = "^[0-9]{10}$")
     @Column(nullable = false, length = 15)
     private String mobile;
 
@@ -69,6 +62,16 @@ public class Member {
 
     @Column(name = "last_year_amount", precision = 10, scale = 2)
     private BigDecimal lastYearAmount;
+
+    @Column(length = 10)
+    private String festivalYear;
+
+    @Column(length = 100)
+    private String committeeCategory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

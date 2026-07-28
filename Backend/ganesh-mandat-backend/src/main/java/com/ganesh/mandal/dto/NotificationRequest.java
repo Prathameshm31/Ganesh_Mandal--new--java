@@ -23,10 +23,14 @@ public class NotificationRequest {
     private String donorName;
     private String amount;
     private String paymentMode;
+    private String transactionId;
     private String date;
     private String email;
     private String mobile;
     private String logoUrl;
     private String bannerUrl;
     private String websiteUrl;
+    private String activityName;
+    private String activityTime;
+    private String activityVenue;
 }

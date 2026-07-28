@@ -90,7 +90,7 @@ public class NotificationService {
         if (request.getNotificationType() == null) return "Notification";
         return switch (request.getNotificationType()) {
             case "Event_Creation" -> "New Event - Hindavi Swarajya Ganesh Festival";
-            case "Reminder" -> "Reminder - Hindavi Swarajya Ganesh Festival";
+            case "Activity_Creation" -> "New Activity - Hindavi Swarajya Ganesh Festival";
             case "Registration" -> "🙏 Welcome to Hindavi Swarajya Family 🙏";
             case "Donation" -> "Donation Received - Hindavi Swarajya";
             default -> "Hindavi Swarajya Notification";
@@ -104,6 +104,7 @@ public class NotificationService {
         return switch (type) {
             case "Registration" -> isEmail ? buildRegistrationEmail(request) : buildRegistrationWhatsApp(request);
             case "Event_Creation" -> isEmail ? buildEventEmail(request) : buildEventWhatsApp(request);
+            case "Activity_Creation" -> isEmail ? buildActivityEmail(request) : buildActivityWhatsApp(request);
             case "Donation" -> isEmail ? buildDonationEmail(request) : buildDonationWhatsApp(request);
             case "Donation_Admin" -> isEmail ? buildDonationAdminEmail(request) : buildDonationAdminWhatsApp(request);
             default -> request.getCustomMessage() != null ? request.getCustomMessage() : "";
@@ -127,9 +128,10 @@ public class NotificationService {
         String name = request.getDonorName() != null ? request.getDonorName() : "Valued Member";
         String mobile = request.getMobile() != null ? request.getMobile() : "";
         Long memberId = request.getUserId();
-        String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://placehold.co/180x60/1a1a2e/ff9933?text=Hindavi+Swarajya";
+        String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://ganesh-mandal-new-react-tan.vercel.app/assets/hindavi-swarajya-logo.80462267.png";
         String bannerUrl = request.getBannerUrl() != null ? request.getBannerUrl() : "https://placehold.co/600x250/ff9933/ffffff?text=Ganesh+Festival";
         String websiteUrl = request.getWebsiteUrl() != null ? request.getWebsiteUrl() : "http://localhost:5173";
+        String dashboardUrl = "https://ganesh-mandal-new-react-tan.vercel.app/login";
         String year = String.valueOf(java.time.Year.now().getValue());
 
         return """
@@ -156,7 +158,7 @@ public class NotificationService {
                                     <td align="center" style="padding:30px 20px 10px;">
                                         <img src="%s" alt="Hindavi Swarajya" style="width:160px; height:auto; display:block;" />
                                         <h1 style="color:#1a1a2e; font-size:22px; margin:10px 0 2px; letter-spacing:1px;">Hindavi Swarajya</h1>
-                                        <p style="color:#b8860b; font-size:13px; margin:0; letter-spacing:2px; text-transform:uppercase;">Ganesh Festival Management System</p>
+
                                     </td>
                                 </tr>
                                 
@@ -316,7 +318,7 @@ public class NotificationService {
                                 <tr>
                                     <td align="center" style="padding:20px 20px 10px;">
                                         <p style="color:#1a1a2e; font-size:14px; margin:0 0 5px; font-weight:600;">Hindavi Swarajya</p>
-                                        <p style="color:#b8860b; font-size:12px; margin:0 0 10px;">Ganesh Festival Management System</p>
+
                                         <p style="color:#888; font-size:12px; margin:3px 0;">📞 Contact: +91 9876543210</p>
                                         <p style="color:#888; font-size:12px; margin:3px 0;">✉️ Email: info@hindaviswarajya.com</p>
                                         <p style="color:#888; font-size:12px; margin:3px 0 15px;">🌐 %s</p>
@@ -325,7 +327,7 @@ public class NotificationService {
                                         <table cellpadding="0" cellspacing="0" align="center">
                                             <tr>
                                                 <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#1877f2; color:#fff; border-radius:50%%; font-size:14px;">f</span></a></td>
-                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#e4405f; color:#fff; border-radius:50%%; font-size:14px;">ig</span></a></td>
+                                                <td style="padding:0 5px;"><a href="https://www.instagram.com/hindavi._.swarajya?igsh=MWhnZW9mNmFwYjI2Zg==" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#e4405f; color:#fff; border-radius:50%%; font-size:14px;">ig</span></a></td>
                                                 <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#ff0000; color:#fff; border-radius:50%%; font-size:14px;">▶</span></a></td>
                                                 <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#25d366; color:#fff; border-radius:50%%; font-size:14px;">WA</span></a></td>
                                             </tr>
@@ -362,7 +364,7 @@ public class NotificationService {
                 mobile,
                 memberId != null ? String.format("%04d", memberId) : "0000",
                 java.time.LocalDate.now().toString(),
-                websiteUrl, websiteUrl, year,
+                dashboardUrl, websiteUrl, year,
                 request.getEmail() != null ? request.getEmail() : ""
             );
     }
@@ -387,6 +389,152 @@ public class NotificationService {
             """.formatted(request.getCustomMessage() != null ? request.getCustomMessage() : "");
     }
 
+    private String buildActivityWhatsApp(NotificationRequest request) {
+        return """
+                🎉 New Activity Added: %s
+                
+                Date: %s
+                Time: %s
+                Venue: %s
+                
+                Join us!
+                - Hindavi Swarajya Team
+                """.formatted(
+                    request.getActivityName() != null ? request.getActivityName() : "TBA",
+                    request.getDate() != null ? request.getDate() : "TBA",
+                    request.getActivityTime() != null ? request.getActivityTime() : "TBA",
+                    request.getActivityVenue() != null ? request.getActivityVenue() : "TBA"
+                );
+    }
+
+    private String buildActivityEmail(NotificationRequest request) {
+        String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://ganesh-mandal-new-react-tan.vercel.app/assets/hindavi-swarajya-logo.80462267.png";
+        String bannerUrl = request.getBannerUrl() != null ? request.getBannerUrl() : "https://placehold.co/600x250/ff9933/ffffff?text=Ganesh+Festival";
+        String websiteUrl = request.getWebsiteUrl() != null ? request.getWebsiteUrl() : "http://localhost:5173";
+        String year = String.valueOf(java.time.Year.now().getValue());
+        String mandalName = "Hindavi Swarajya";
+        String activityName = request.getActivityName() != null ? request.getActivityName() : "TBA";
+        String date = request.getDate() != null ? request.getDate() : "TBA";
+        String time = request.getActivityTime() != null ? request.getActivityTime() : "TBA";
+        String venue = request.getActivityVenue() != null ? request.getActivityVenue() : "TBA";
+        
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>New Activity Announcement</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#fef9f0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#fef9f0;">
+                    <tr>
+                        <td align="center" style="padding:20px 10px;">
+                            <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%%; background-color:#ffffff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); border:1px solid #f0e0c0;">
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:16px 16px 0 0;"></td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:30px 20px 10px;">
+                                        <img src="%s" alt="Hindavi Swarajya" style="width:160px; height:auto; display:block;" />
+                                        <h1 style="color:#1a1a2e; font-size:22px; margin:10px 0 2px; letter-spacing:1px;">Hindavi Swarajya</h1>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <img src="%s" alt="New Activity" style="width:100%%; max-width:560px; height:auto; border-radius:12px; display:block; box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px 10px;">
+                                        <div style="font-size:48px; line-height:1;">🎉</div>
+                                        <h2 style="color:#d32f2f; font-size:26px; margin:10px 0 5px;">New Activity Announcement!</h2>
+                                        <div style="width:80px; height:3px; background:linear-gradient(90deg,#ff9933,#d32f2f,#ffd700); margin:12px auto; border-radius:2px;"></div>
+                                        <p style="color:#555; font-size:15px; line-height:1.7; margin:10px 20px 0; max-width:480px; text-align:left;">
+                                            Dear Team,<br/><br/>
+                                            Greetings!<br/><br/>
+                                            As part of our <strong>Ganesh Festival %s</strong> celebrations, we are delighted to introduce a new activity for all members and well-wishers.<br/><br/>
+                                            We warmly invite you to participate and make this activity a grand success. Your enthusiasm and involvement will make the celebration even more memorable.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:15px 20px;">
+                                        <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#fef9f0,#fff3e0); border-radius:12px; border:1px solid #e8d5a3; max-width:520px;">
+                                            <tr>
+                                                <td style="padding:20px;">
+                                                    <h3 style="color:#b8860b; font-size:16px; margin:0 0 15px; text-align:center; letter-spacing:1px;">✦ ACTIVITY DETAILS ✦</h3>
+                                                    <table width="100%%" cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:40px;">📌</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:130px;">Activity Name</td>
+                                                            <td style="padding:6px 0; color:#d32f2f; font-size:16px; font-weight:700;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">📅</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Date</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">⏰</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Time</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">📍</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Venue</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px 10px;">
+                                        <p style="color:#555; font-size:15px; line-height:1.7; margin:0 20px 10px; max-width:480px; text-align:left;">
+                                            We request you all to join us and encourage your friends and family to participate as well. Let us come together to celebrate the spirit of Ganesh Chaturthi with devotion, joy, and unity.<br/><br/>
+                                            We look forward to your active participation.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:0 20px;">
+                                        <div style="width:100%%; height:1px; background:linear-gradient(90deg,transparent,#e8d5a3,#d32f2f,#e8d5a3,transparent);"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <p style="color:#555; font-size:14px; margin:0 0 5px;">Warm Regards,</p>
+                                        <p style="color:#1a1a2e; font-size:14px; margin:0 0 10px; font-weight:600;">Admin Team<br/>%s</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📍 Pune, Maharashtra</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📞 +91 9876543210</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📧 info@hindaviswarajya.com</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0 15px;">🌐 %s</p>
+                                        <h3 style="color:#d32f2f; font-size:16px; margin:15px 0;">Ganpati Bappa Morya! 🙏</h3>
+                                        <p style="color:#bbb; font-size:11px; margin:15px 0 0;">&copy; %s %s. All rights reserved.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:0 0 16px 16px;"></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(
+                logoUrl, bannerUrl, year,
+                activityName, date, time, venue,
+                mandalName, websiteUrl, year, mandalName
+            );
+    }
+
     private String buildDonationWhatsApp(NotificationRequest request) {
         String name = request.getDonorName() != null ? request.getDonorName() : "Donor";
         String amount = request.getAmount() != null ? request.getAmount() : "0";
@@ -403,22 +551,151 @@ public class NotificationService {
     }
 
     private String buildDonationEmail(NotificationRequest request) {
-        String name = request.getDonorName() != null ? request.getDonorName() : "Donor";
+        String name = request.getDonorName() != null ? request.getDonorName() : "Valued Donor";
         String amount = request.getAmount() != null ? request.getAmount() : "0";
-        String mode = request.getPaymentMode() != null ? request.getPaymentMode() : "";
+        String transactionId = request.getTransactionId() != null ? request.getTransactionId() : "N/A";
         String date = request.getDate() != null ? request.getDate() : "";
+        String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://ganesh-mandal-new-react-tan.vercel.app/assets/hindavi-swarajya-logo.80462267.png";
+        String bannerUrl = request.getBannerUrl() != null ? request.getBannerUrl() : "https://placehold.co/600x250/ff9933/ffffff?text=Ganesh+Festival";
+        String websiteUrl = request.getWebsiteUrl() != null ? request.getWebsiteUrl() : "http://localhost:5173";
+        String dashboardUrl = "https://ganesh-mandal-new-react-tan.vercel.app/login";
+        String year = String.valueOf(java.time.Year.now().getValue());
+        String mandalName = "Hindavi Swarajya";
+        
         return """
-            <h2 style="color:#d32f2f;">🙏 Thank You For Your Donation</h2>
-            <p>Donation Received Successfully.</p>
-            <table style="border:1px solid #ddd; border-radius:8px; padding:15px; background:#fef9f0;">
-                <tr><td><strong>Name:</strong></td><td>%s</td></tr>
-                <tr><td><strong>Amount:</strong></td><td>₹%s</td></tr>
-                <tr><td><strong>Mode:</strong></td><td>%s</td></tr>
-                <tr><td><strong>Date:</strong></td><td>%s</td></tr>
-            </table>
-            <p>Your contribution helps us organize the festival successfully.</p>
-            <p>- Hindavi Swarajya Team</p>
-            """.formatted(name, amount, mode, date);
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Thank You For Your Donation</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#fef9f0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#fef9f0;">
+                    <tr>
+                        <td align="center" style="padding:20px 10px;">
+                            <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%%; background-color:#ffffff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); border:1px solid #f0e0c0;">
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:16px 16px 0 0;"></td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:30px 20px 10px;">
+                                        <img src="%s" alt="Hindavi Swarajya" style="width:160px; height:auto; display:block;" />
+                                        <h1 style="color:#1a1a2e; font-size:22px; margin:10px 0 2px; letter-spacing:1px;">Hindavi Swarajya</h1>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <img src="%s" alt="Donation Thank You" style="width:100%%; max-width:560px; height:auto; border-radius:12px; display:block; box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px 10px;">
+                                        <div style="font-size:48px; line-height:1;">🌺</div>
+                                        <h2 style="color:#d32f2f; font-size:26px; margin:10px 0 5px;">🙏 Thank You For Your Generosity 🙏</h2>
+                                        <div style="width:80px; height:3px; background:linear-gradient(90deg,#ff9933,#d32f2f,#ffd700); margin:12px auto; border-radius:2px;"></div>
+                                        <p style="color:#555; font-size:15px; line-height:1.7; margin:10px 20px 0; max-width:480px; text-align:left;">
+                                            Dear <strong style="color:#1a1a2e;">%s</strong>,<br/><br/>
+                                            🙏 <strong>Ganpati Bappa Morya!</strong><br/><br/>
+                                            On behalf of <strong>%s</strong>, we sincerely thank you for your generous donation towards our <strong>Ganesh Chaturthi %s</strong> celebrations.<br/><br/>
+                                            Your support and devotion play a vital role in making this festival a grand success. Because of your contribution, we can continue our traditions, organize cultural programs, serve devotees, and celebrate Lord Ganesha's arrival with great enthusiasm and devotion.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:15px 20px;">
+                                        <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#fef9f0,#fff3e0); border-radius:12px; border:1px solid #e8d5a3; max-width:520px;">
+                                            <tr>
+                                                <td style="padding:20px;">
+                                                    <h3 style="color:#b8860b; font-size:16px; margin:0 0 15px; text-align:center; letter-spacing:1px;">✦ DONATION DETAILS ✦</h3>
+                                                    <table width="100%%" cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:40px;">💰</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:130px;">Donation Amount</td>
+                                                            <td style="padding:6px 0; color:#d32f2f; font-size:16px; font-weight:700;">₹%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">🧾</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Transaction ID</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">📅</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Date</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px 10px;">
+                                        <p style="color:#555; font-size:15px; line-height:1.7; margin:0 20px 10px; max-width:480px; text-align:left;">
+                                            Your generosity is deeply appreciated, and we are grateful to have supporters like you in our community.<br/><br/>
+                                            May <strong>Lord Ganesha</strong> bless you and your family with happiness, prosperity, good health, and success in every endeavor.<br/><br/>
+                                            Thank you once again for being a part of this divine celebration.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px;">
+                                        <table cellpadding="0" cellspacing="0" style="border-radius:50px; background:linear-gradient(135deg,#ff9933,#d32f2f); box-shadow:0 4px 15px rgba(211,47,47,0.3);">
+                                            <tr>
+                                                <td align="center" style="padding:14px 40px;">
+                                                    <a href="%s" style="color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; letter-spacing:1px; display:inline-block;">🚀 Visit Dashboard</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:0 20px;">
+                                        <div style="width:100%%; height:1px; background:linear-gradient(90deg,transparent,#e8d5a3,#d32f2f,#e8d5a3,transparent);"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <p style="color:#555; font-size:14px; margin:0 0 5px;">With gratitude,</p>
+                                        <p style="color:#1a1a2e; font-size:14px; margin:0 0 10px; font-weight:600;">%s</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📍 Pune, Maharashtra</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📞 +91 9876543210</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📧 info@hindaviswarajya.com</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0 15px;">🌐 %s</p>
+                                        <h3 style="color:#d32f2f; font-size:16px; margin:15px 0;">Ganpati Bappa Morya! Mangal Murti Morya! 🙏</h3>
+                                        <table cellpadding="0" cellspacing="0" align="center">
+                                            <tr>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#1877f2; color:#fff; border-radius:50%%; font-size:14px;">f</span></a></td>
+                                                <td style="padding:0 5px;"><a href="https://www.instagram.com/hindavi._.swarajya?igsh=MWhnZW9mNmFwYjI2Zg==" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#e4405f; color:#fff; border-radius:50%%; font-size:14px;">ig</span></a></td>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#ff0000; color:#fff; border-radius:50%%; font-size:14px;">▶</span></a></td>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#25d366; color:#fff; border-radius:50%%; font-size:14px;">WA</span></a></td>
+                                            </tr>
+                                        </table>
+                                        <p style="color:#bbb; font-size:11px; margin:15px 0 0;">&copy; %s %s. All rights reserved.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:0 0 16px 16px;"></td>
+                                </tr>
+                            </table>
+                            <p style="color:#ccc; font-size:10px; margin-top:10px;">This email was sent to %s. You are receiving this because of your contribution to %s.</p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(
+                logoUrl, bannerUrl, name, mandalName, year, 
+                amount, transactionId, date, 
+                dashboardUrl, 
+                mandalName, websiteUrl, 
+                year, mandalName,
+                request.getEmail() != null ? request.getEmail() : "", mandalName
+            );
     }
 
     private String buildDonationAdminWhatsApp(NotificationRequest request) {
@@ -428,11 +705,139 @@ public class NotificationService {
     private String buildDonationAdminEmail(NotificationRequest request) {
         String name = request.getDonorName() != null ? request.getDonorName() : "Donor";
         String amount = request.getAmount() != null ? request.getAmount() : "0";
+        String mode = request.getPaymentMode() != null ? request.getPaymentMode() : "Unknown";
+        String date = request.getDate() != null ? request.getDate() : java.time.LocalDate.now().toString();
+        String logoUrl = request.getLogoUrl() != null ? request.getLogoUrl() : "https://ganesh-mandal-new-react-tan.vercel.app/assets/hindavi-swarajya-logo.80462267.png";
+        String bannerUrl = request.getBannerUrl() != null ? request.getBannerUrl() : "https://placehold.co/600x250/ff9933/ffffff?text=Ganesh+Festival";
+        String websiteUrl = request.getWebsiteUrl() != null ? request.getWebsiteUrl() : "http://localhost:5173";
+        String dashboardUrl = "https://ganesh-mandal-new-react-tan.vercel.app/login";
+        String year = String.valueOf(java.time.Year.now().getValue());
+        
         return """
-            <h2>New Donation Received</h2>
-            <p>Donor Name: %s</p>
-            <p>Amount: ₹%s</p>
-            """.formatted(name, amount);
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>New Donation Received</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#fef9f0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#fef9f0;">
+                    <tr>
+                        <td align="center" style="padding:20px 10px;">
+                            <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%%; background-color:#ffffff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.08); border:1px solid #f0e0c0;">
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:16px 16px 0 0;"></td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:30px 20px 10px;">
+                                        <img src="%s" alt="Hindavi Swarajya" style="width:160px; height:auto; display:block;" />
+                                        <h1 style="color:#1a1a2e; font-size:22px; margin:10px 0 2px; letter-spacing:1px;">Hindavi Swarajya</h1>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <img src="%s" alt="New Donation Received" style="width:100%%; max-width:560px; height:auto; border-radius:12px; display:block; box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px 10px;">
+                                        <div style="font-size:48px; line-height:1;">🔔</div>
+                                        <h2 style="color:#d32f2f; font-size:26px; margin:10px 0 5px;">New Donation Received!</h2>
+                                        <div style="width:80px; height:3px; background:linear-gradient(90deg,#ff9933,#d32f2f,#ffd700); margin:12px auto; border-radius:2px;"></div>
+                                        <p style="color:#555; font-size:15px; line-height:1.7; margin:10px 20px 0; max-width:480px;">
+                                            Dear Admin,<br/><br/>
+                                            A new donation has been successfully added to the system by <strong style="color:#1a1a2e;">%s</strong>.
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:15px 20px;">
+                                        <table width="100%%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#fef9f0,#fff3e0); border-radius:12px; border:1px solid #e8d5a3; max-width:520px;">
+                                            <tr>
+                                                <td style="padding:20px;">
+                                                    <h3 style="color:#b8860b; font-size:16px; margin:0 0 15px; text-align:center; letter-spacing:1px;">✦ DONATION DETAILS ✦</h3>
+                                                    <table width="100%%" cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:40px;">👤</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px; width:100px;">Donor Name</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px; font-weight:600;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">💰</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Amount</td>
+                                                            <td style="padding:6px 0; color:#d32f2f; font-size:16px; font-weight:700;">₹%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">💳</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Mode</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                        <tr><td colspan="3" style="border-bottom:1px dashed #e8d5a3; height:1px;"></td></tr>
+                                                        <tr>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">📅</td>
+                                                            <td style="padding:6px 0; color:#888; font-size:13px;">Date</td>
+                                                            <td style="padding:6px 0; color:#1a1a2e; font-size:14px;">%s</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:25px 20px;">
+                                        <table cellpadding="0" cellspacing="0" style="border-radius:50px; background:linear-gradient(135deg,#ff9933,#d32f2f); box-shadow:0 4px 15px rgba(211,47,47,0.3);">
+                                            <tr>
+                                                <td align="center" style="padding:14px 40px;">
+                                                    <a href="%s" style="color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; letter-spacing:1px; display:inline-block;">🚀 View in Dashboard</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:0 20px;">
+                                        <div style="width:100%%; height:1px; background:linear-gradient(90deg,transparent,#e8d5a3,#d32f2f,#e8d5a3,transparent);"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding:20px 20px 10px;">
+                                        <p style="color:#555; font-size:14px; margin:0 0 5px;">With gratitude,</p>
+                                        <p style="color:#1a1a2e; font-size:14px; margin:0 0 10px; font-weight:600;">Hindavi Swarajya</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📍 Pune, Maharashtra</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📞 +91 9876543210</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0;">📧 info@hindaviswarajya.com</p>
+                                        <p style="color:#888; font-size:12px; margin:3px 0 15px;">🌐 %s</p>
+                                        <h3 style="color:#d32f2f; font-size:16px; margin:15px 0;">Ganpati Bappa Morya! Mangal Murti Morya! 🙏</h3>
+                                        <table cellpadding="0" cellspacing="0" align="center">
+                                            <tr>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#1877f2; color:#fff; border-radius:50%%; font-size:14px;">f</span></a></td>
+                                                <td style="padding:0 5px;"><a href="https://www.instagram.com/hindavi._.swarajya?igsh=MWhnZW9mNmFwYjI2Zg==" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#e4405f; color:#fff; border-radius:50%%; font-size:14px;">ig</span></a></td>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#ff0000; color:#fff; border-radius:50%%; font-size:14px;">▶</span></a></td>
+                                                <td style="padding:0 5px;"><a href="#" style="text-decoration:none;"><span style="display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; background:#25d366; color:#fff; border-radius:50%%; font-size:14px;">WA</span></a></td>
+                                            </tr>
+                                        </table>
+                                        <p style="color:#bbb; font-size:11px; margin:15px 0 0;">&copy; %s Hindavi Swarajya. All rights reserved.</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background: linear-gradient(90deg, #ff9933, #d32f2f, #ffd700, #d32f2f, #ff9933); height:6px; border-radius:0 0 16px 16px;"></td>
+                                </tr>
+                            </table>
+                            <p style="color:#ccc; font-size:10px; margin-top:10px;">This email is an automated admin notification.</p>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(
+                logoUrl, bannerUrl, name, name, amount, mode, date,
+                dashboardUrl, websiteUrl, year
+            );
     }
 
     @Transactional

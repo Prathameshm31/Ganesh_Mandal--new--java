@@ -8,6 +8,7 @@ import com.ganesh.mandal.exception.ResourceNotFoundException;
 import com.ganesh.mandal.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class MemberService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -46,16 +48,27 @@ public class MemberService {
         if (dto.getRoleId() != null) {
             String generatedUsername = dto.getUsername();
             if (generatedUsername == null || generatedUsername.isBlank()) {
-                generatedUsername = dto.getMobile();
+                generatedUsername = dto.getEmail();
+            }
+            
+            if (generatedUsername == null || generatedUsername.isBlank()) {
+                throw new IllegalArgumentException("Email is required to create a user account");
+            }
+            
+            if (userRepository.findByUsername(generatedUsername).isPresent()) {
+                throw new IllegalArgumentException("Username '" + generatedUsername + "' is already taken. Please choose a different one.");
             }
 
             User user = User.builder()
                     .username(generatedUsername)
-                    .password(dto.getPassword() != null ? dto.getPassword() : "changeme")
+                    .password(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : dto.getMobile()))
                     .name(dto.getName())
                     .email(dto.getEmail())
                     .mobile(dto.getMobile())
                     .status("ACTIVE")
+                    .firstLogin(true)
+                    .failedLoginAttempts(0)
+                    .accountLocked(false)
                     .build();
             user = userRepository.save(user);
 
@@ -68,7 +81,7 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
         MemberDTO result = toDTO(saved);
-        publishRegistrationNotification(result);
+        publishRegistrationNotification(result, dto.getPassword() != null ? dto.getPassword() : dto.getMobile());
         return result;
     }
 
@@ -103,15 +116,27 @@ public class MemberService {
             } else {
                 String generatedUsername = dto.getUsername();
                 if (generatedUsername == null || generatedUsername.isBlank()) {
-                    generatedUsername = dto.getMobile();
+                    generatedUsername = dto.getEmail();
                 }
+                
+                if (generatedUsername == null || generatedUsername.isBlank()) {
+                    throw new IllegalArgumentException("Email is required to create a user account");
+                }
+                
+                if (userRepository.findByUsername(generatedUsername).isPresent()) {
+                    throw new IllegalArgumentException("Username '" + generatedUsername + "' is already taken. Please choose a different one.");
+                }
+
                 User user = User.builder()
                         .username(generatedUsername)
-                        .password(dto.getPassword() != null ? dto.getPassword() : "changeme")
+                        .password(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : dto.getMobile()))
                         .name(dto.getName())
                         .email(dto.getEmail())
                         .mobile(dto.getMobile())
                         .status("ACTIVE")
+                        .firstLogin(true)
+                        .failedLoginAttempts(0)
+                        .accountLocked(false)
                         .build();
                 user = userRepository.save(user);
                 Role role = roleRepository.findById(dto.getRoleId())
@@ -230,7 +255,7 @@ public class MemberService {
                 .build();
     }
 
-    private void publishRegistrationNotification(MemberDTO member) {
+    private void publishRegistrationNotification(MemberDTO member, String defaultPassword) {
         List<String> receivers = new ArrayList<>();
         List<String> channels = new ArrayList<>();
         if (member.getMobile() != null && !member.getMobile().isBlank()) {
@@ -241,11 +266,14 @@ public class MemberService {
             receivers.add(member.getEmail()); channels.add("Email");
         }
         if (receivers.isEmpty()) return;
+        String loginDetails = "\n\nLogin Credentials:\nUsername: " + member.getEmail() + "\nPassword: " + defaultPassword;
         NotificationRequest req = NotificationRequest.builder()
                 .notificationType("Registration").receivers(receivers).channels(channels)
                 .donorName(member.getName()).mobile(member.getMobile()).userId(member.getId())
                 .email(member.getEmail()).logoUrl(null).bannerUrl(null)
-                .websiteUrl("http://localhost:5173").build();
+                .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
+                .customMessage(loginDetails)
+                .build();
         eventPublisher.publishEvent(new NotificationEvent(this, req));
     }
 }

@@ -13,7 +13,7 @@ public class User {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 100)
     private String username;
 
     @Column(nullable = false)
@@ -31,6 +31,24 @@ public class User {
     @Column(length = 20)
     @Builder.Default
     private String status = "ACTIVE";
+
+    @Builder.Default
+    @Column(name = "first_login")
+    private Boolean firstLogin = true;
+
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
+
+    @Builder.Default
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts = 0;
+
+    @Builder.Default
+    @Column(name = "account_locked")
+    private Boolean accountLocked = false;
+
+    @Column(name = "password_updated_at")
+    private LocalDateTime passwordUpdatedAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

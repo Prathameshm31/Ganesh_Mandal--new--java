@@ -4,8 +4,10 @@ import com.ganesh.mandal.entity.*;
 import com.ganesh.mandal.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,9 +22,12 @@ public class DataSeeder implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
+        migratePlaintextPasswords();
+
         if (roleRepository.count() > 0) return;
 
         seedPermissions();
@@ -30,6 +35,22 @@ public class DataSeeder implements CommandLineRunner {
         seedUsers();
         seedEvents();
         seedVolunteers();
+    }
+
+    private void migratePlaintextPasswords() {
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            String pw = user.getPassword();
+            if (pw != null && !pw.startsWith("$2a$") && !pw.startsWith("$2b$") && !pw.startsWith("$2y$")) {
+                user.setPassword(passwordEncoder.encode(pw));
+                user.setFirstLogin(false);
+                user.setFailedLoginAttempts(0);
+                user.setAccountLocked(false);
+                user.setPasswordUpdatedAt(LocalDateTime.now());
+                userRepository.save(user);
+                System.out.println("Migrated password for user: " + user.getUsername());
+            }
+        }
     }
 
     private void seedPermissions() {
@@ -161,9 +182,9 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedUsers() {
-        User admin = User.builder().username("admin").password("admin123").name("Admin User").email("admin@example.com").status("ACTIVE").build();
-        User user = User.builder().username("user").password("user123").name("Regular User").email("user@example.com").status("ACTIVE").build();
-        User manager = User.builder().username("manager").password("manager123").name("Manager User").email("manager@example.com").status("ACTIVE").build();
+        User admin = User.builder().username("admin").password(passwordEncoder.encode("admin123")).name("Admin User").email("admin@example.com").status("ACTIVE").firstLogin(false).failedLoginAttempts(0).accountLocked(false).passwordUpdatedAt(java.time.LocalDateTime.now()).build();
+        User user = User.builder().username("user").password(passwordEncoder.encode("user123")).name("Regular User").email("user@example.com").status("ACTIVE").firstLogin(false).failedLoginAttempts(0).accountLocked(false).passwordUpdatedAt(java.time.LocalDateTime.now()).build();
+        User manager = User.builder().username("manager").password(passwordEncoder.encode("manager123")).name("Manager User").email("manager@example.com").status("ACTIVE").firstLogin(false).failedLoginAttempts(0).accountLocked(false).passwordUpdatedAt(java.time.LocalDateTime.now()).build();
         userRepository.saveAll(List.of(admin, user, manager));
 
         Role adminRole = roleRepository.findByRoleName("ADMIN").orElseThrow();

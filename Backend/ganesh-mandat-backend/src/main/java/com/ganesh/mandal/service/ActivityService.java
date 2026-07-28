@@ -8,6 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ganesh.mandal.event.NotificationEvent;
+import com.ganesh.mandal.dto.NotificationRequest;
+import com.ganesh.mandal.entity.Member;
+import com.ganesh.mandal.repository.MemberRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +21,8 @@ import java.util.stream.Collectors;
 public class ActivityService {
 
     private final ActivityRepository activityRepository;
+    private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<ActivityDTO> getAllActivities() {
@@ -36,7 +43,9 @@ public class ActivityService {
     public ActivityDTO createActivity(ActivityDTO dto) {
         Activity activity = toEntity(dto);
         Activity saved = activityRepository.save(activity);
-        return toDTO(saved);
+        ActivityDTO savedDto = toDTO(saved);
+        publishActivityNotification(savedDto);
+        return savedDto;
     }
 
     @Transactional
@@ -111,5 +120,26 @@ public class ActivityService {
                 .bannerImage(dto.getBannerImage())
                 .category(dto.getCategory())
                 .build();
+    }
+
+    private void publishActivityNotification(ActivityDTO activity) {
+        List<Member> members = memberRepository.findAll();
+        List<String> receivers = members.stream()
+                .map(Member::getEmail)
+                .filter(e -> e != null && !e.isBlank())
+                .collect(Collectors.toList());
+        if (receivers.isEmpty()) return;
+
+        NotificationRequest req = NotificationRequest.builder()
+                .notificationType("Activity_Creation")
+                .receivers(receivers)
+                .channels(List.of("Email"))
+                .eventId(activity.getId())
+                .activityName(activity.getTitle())
+                .date(activity.getDate() != null ? activity.getDate().toString() : "TBA")
+                .activityTime(activity.getTime() != null ? activity.getTime() : "TBA")
+                .activityVenue(activity.getVenue() != null ? activity.getVenue() : "TBA")
+                .build();
+        eventPublisher.publishEvent(new NotificationEvent(this, req));
     }
 }

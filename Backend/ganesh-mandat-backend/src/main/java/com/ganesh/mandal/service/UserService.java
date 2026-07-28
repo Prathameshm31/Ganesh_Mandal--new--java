@@ -6,6 +6,7 @@ import com.ganesh.mandal.exception.ResourceNotFoundException;
 import com.ganesh.mandal.repository.UserRepository;
 import com.ganesh.mandal.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -38,11 +40,14 @@ public class UserService {
     public UserDTO createUser(UserDTO dto) {
         User user = User.builder()
                 .username(dto.getUsername())
-                .password(dto.getPassword() != null ? dto.getPassword() : "changeme")
+                .password(passwordEncoder.encode(dto.getPassword() != null ? dto.getPassword() : "changeme"))
                 .name(dto.getName())
                 .email(dto.getEmail())
                 .mobile(dto.getMobile())
                 .status("ACTIVE")
+                .firstLogin(true)
+                .failedLoginAttempts(0)
+                .accountLocked(false)
                 .build();
         user = userRepository.save(user);
         return toDTO(user);
@@ -55,6 +60,10 @@ public class UserService {
         if (dto.getEmail() != null) user.setEmail(dto.getEmail());
         if (dto.getMobile() != null) user.setMobile(dto.getMobile());
         if (dto.getStatus() != null) user.setStatus(dto.getStatus());
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            user.setPasswordUpdatedAt(java.time.LocalDateTime.now());
+        }
         user = userRepository.save(user);
         return toDTO(user);
     }

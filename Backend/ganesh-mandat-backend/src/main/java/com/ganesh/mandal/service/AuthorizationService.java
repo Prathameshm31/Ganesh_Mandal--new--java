@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -18,6 +19,7 @@ public class AuthorizationService {
     private final UserRoleRepository userRoleRepository;
     private final RolePermissionRepository rolePermissionRepository;
     private final UserPermissionRepository userPermissionRepository;
+    private final UserSessionRepository userSessionRepository;
 
     public Long getCurrentUserId(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -26,12 +28,13 @@ public class AuthorizationService {
         }
         try {
             String token = authHeader.substring(7);
-            String decoded = new String(Base64.getDecoder().decode(token));
-            String[] parts = decoded.split(":", 2);
-            String username = parts[0];
-            User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new AccessDeniedException("User not found"));
-            return user.getId();
+            UserSession session = userSessionRepository.findByTokenAndActiveTrue(token)
+                    .orElseThrow(() -> new AccessDeniedException("Invalid or expired session"));
+            session.setLastActivityAt(LocalDateTime.now());
+            userSessionRepository.save(session);
+            return session.getUser().getId();
+        } catch (AccessDeniedException e) {
+            throw e;
         } catch (Exception e) {
             throw new AccessDeniedException("Invalid authorization token");
         }

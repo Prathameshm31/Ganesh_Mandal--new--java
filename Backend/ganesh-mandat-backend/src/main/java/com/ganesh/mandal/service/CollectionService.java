@@ -201,6 +201,7 @@ public class CollectionService {
         String donorEmail = member.getEmail();
         String amount = collection.getAmount() != null ? collection.getAmount().toString() : "";
         String mode = collection.getPaymentMode() != null ? collection.getPaymentMode() : "";
+        String transactionId = collection.getTransactionId() != null ? collection.getTransactionId() : "N/A";
         String date = collection.getCollectionDate() != null ? collection.getCollectionDate().toString() : "";
 
         if (donorMobile != null && !donorMobile.isBlank()) {
@@ -211,24 +212,25 @@ public class CollectionService {
                     .donorName(member.getName())
                     .amount(amount)
                     .paymentMode(mode)
+                    .transactionId(transactionId)
                     .date(date)
                     .build();
             eventPublisher.publishEvent(new NotificationEvent(this, donorReq));
         }
 
-        List<String> adminReceivers = new java.util.ArrayList<>();
-        if (donorEmail != null && !donorEmail.isBlank()) adminReceivers.add(donorEmail);
-        if (!adminReceivers.isEmpty()) {
-            NotificationRequest adminReq = NotificationRequest.builder()
-                    .notificationType("Donation_Admin")
-                    .receivers(adminReceivers)
+        if (donorEmail != null && !donorEmail.isBlank()) {
+            NotificationRequest donorEmailReq = NotificationRequest.builder()
+                    .notificationType("Donation")
+                    .receivers(List.of(donorEmail))
                     .channels(List.of("Email"))
                     .donorName(member.getName())
                     .amount(amount)
                     .paymentMode(mode)
+                    .transactionId(transactionId)
                     .date(date)
+                    .email(donorEmail)
                     .build();
-            eventPublisher.publishEvent(new NotificationEvent(this, adminReq));
+            eventPublisher.publishEvent(new NotificationEvent(this, donorEmailReq));
         }
     }
 }

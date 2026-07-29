@@ -22,7 +22,7 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true)
     private String email;
 
     @Column(length = 15)
@@ -49,6 +49,22 @@ public class User {
 
     @Column(name = "password_updated_at")
     private LocalDateTime passwordUpdatedAt;
+
+    @Column(name = "registration_source", length = 20)
+    @Builder.Default
+    private String registrationSource = "ADMIN";
+
+    @Column(length = 200)
+    private String address;
+
+    @Column(length = 100)
+    private String city;
+
+    @Column(length = 100)
+    private String state;
+
+    @Column(length = 20)
+    private String pincode;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -2,18 +2,22 @@ package com.ganesh.mandal.service;
 
 import com.ganesh.mandal.dto.*;
 import com.ganesh.mandal.entity.*;
+import com.ganesh.mandal.event.NotificationEvent;
 import com.ganesh.mandal.exception.*;
 import com.ganesh.mandal.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -29,6 +33,9 @@ public class AuthService {
     private final AuthorizationService authorizationService;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
+    private final ApplicationEventPublisher eventPublisher;
+    private final RoleRepository roleRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -37,10 +44,12 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(request.getUsername()).orElse(null);
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
         if (user == null) {
-            user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+            user = userRepository.findByEmail(request.getUsername()).orElse(null);
+        }
+        if (user == null) {
+            throw new InvalidCredentialsException("No account found. Please register first.");
         }
 
         if (Boolean.TRUE.equals(user.getAccountLocked())) {
@@ -102,6 +111,97 @@ public class AuthService {
                 .firstLogin(user.getFirstLogin())
                 .status(user.getStatus())
                 .build();
+    }
+
+    @Transactional
+    public RegisterResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+        if (userRepository.existsByMobile(request.getMobile())) {
+            throw new IllegalArgumentException("Mobile number already registered");
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+
+        Role userRole = roleRepository.findByRoleName("User")
+                .orElseThrow(() -> new RuntimeException("Default 'User' role not found. Please contact administrator."));
+
+        User user = User.builder()
+                .username(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getFullName())
+                .email(request.getEmail())
+                .mobile(request.getMobile())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .state(request.getState())
+                .pincode(request.getPincode())
+                .status("ACTIVE")
+                .firstLogin(true)
+                .failedLoginAttempts(0)
+                .accountLocked(false)
+                .registrationSource("PUBLIC_REGISTRATION")
+                .build();
+        user = userRepository.save(user);
+
+        userRoleRepository.save(UserRole.builder().user(user).role(userRole).build());
+
+        Member member = Member.builder()
+                .name(request.getFullName())
+                .mobile(request.getMobile())
+                .email(request.getEmail())
+                .address(request.getAddress())
+                .profilePhoto(request.getProfilePhoto())
+                .status("Active")
+                .joinDate(LocalDate.now())
+                .user(user)
+                .build();
+        member = memberRepository.save(member);
+
+        RegisterResponse response = RegisterResponse.builder()
+                .id(member.getId())
+                .name(request.getFullName())
+                .email(request.getEmail())
+                .mobile(request.getMobile())
+                .message("Registration successful! Welcome to Hindavi Swarajya.")
+                .build();
+
+        sendWelcomeNotification(member, user);
+
+        return response;
+    }
+
+    private void sendWelcomeNotification(Member member, User user) {
+        try {
+            List<String> receivers = new ArrayList<>();
+            List<String> channels = new ArrayList<>();
+            if (user.getMobile() != null && !user.getMobile().isBlank()) {
+                receivers.add(user.getMobile());
+                channels.add("WhatsApp");
+            }
+            if (user.getEmail() != null && !user.getEmail().isBlank()) {
+                receivers.add(user.getEmail());
+                channels.add("Email");
+            }
+            if (receivers.isEmpty()) return;
+
+            NotificationRequest req = NotificationRequest.builder()
+                    .notificationType("Registration")
+                    .receivers(receivers)
+                    .channels(channels)
+                    .donorName(user.getName())
+                    .mobile(user.getMobile())
+                    .userId(member.getId())
+                    .email(user.getEmail())
+                    .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
+                    .customMessage("Welcome to Hindavi Swarajya! Your account has been created successfully.")
+                    .build();
+            eventPublisher.publishEvent(new NotificationEvent(this, req));
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome notification: " + e.getMessage());
+        }
     }
 
     @Transactional

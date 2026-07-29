@@ -66,5 +66,7 @@ public class MemberDTO {
 
     private List<String> roles;
 
+    private String registrationSource;
+
     private LocalDateTime createdAt;
 }

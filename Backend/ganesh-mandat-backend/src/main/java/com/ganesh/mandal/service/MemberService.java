@@ -82,7 +82,7 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
         MemberDTO result = toDTO(saved);
-        publishRegistrationNotification(result, dto.getPassword() != null ? dto.getPassword() : dto.getMobile());
+        publishRegistrationNotification(saved, dto.getPassword() != null ? dto.getPassword() : dto.getMobile());
         return result;
     }
 
@@ -257,25 +257,30 @@ public class MemberService {
                 .build();
     }
 
-    private void publishRegistrationNotification(MemberDTO member, String defaultPassword) {
-        List<String> receivers = new ArrayList<>();
-        List<String> channels = new ArrayList<>();
-        if (member.getMobile() != null && !member.getMobile().isBlank()) {
+    public void publishRegistrationNotification(Member member, String defaultPassword) {
+        try {
+            List<String> receivers = new ArrayList<>();
+            List<String> channels = new ArrayList<>();
             String mobile = member.getMobile();
-            if (!mobile.contains("@")) { receivers.add(mobile); channels.add("WhatsApp"); }
+            if (mobile != null && !mobile.isBlank()) {
+                if (!mobile.contains("@")) { receivers.add(mobile); channels.add("WhatsApp"); }
+            }
+            String email = member.getEmail();
+            if (email != null && !email.isBlank()) {
+                receivers.add(email); channels.add("Email");
+            }
+            if (receivers.isEmpty()) return;
+            String loginDetails = "\n\nLogin Credentials:\nUsername: " + email + "\nPassword: " + defaultPassword;
+            NotificationRequest req = NotificationRequest.builder()
+                    .notificationType("Registration").receivers(receivers).channels(channels)
+                    .donorName(member.getName()).mobile(mobile).userId(member.getId())
+                    .email(email).logoUrl(null).bannerUrl(null)
+                    .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
+                    .customMessage(loginDetails)
+                    .build();
+            eventPublisher.publishEvent(new NotificationEvent(this, req));
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome notification: " + e.getMessage());
         }
-        if (member.getEmail() != null && !member.getEmail().isBlank()) {
-            receivers.add(member.getEmail()); channels.add("Email");
-        }
-        if (receivers.isEmpty()) return;
-        String loginDetails = "\n\nLogin Credentials:\nUsername: " + member.getEmail() + "\nPassword: " + defaultPassword;
-        NotificationRequest req = NotificationRequest.builder()
-                .notificationType("Registration").receivers(receivers).channels(channels)
-                .donorName(member.getName()).mobile(member.getMobile()).userId(member.getId())
-                .email(member.getEmail()).logoUrl(null).bannerUrl(null)
-                .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
-                .customMessage(loginDetails)
-                .build();
-        eventPublisher.publishEvent(new NotificationEvent(this, req));
     }
 }

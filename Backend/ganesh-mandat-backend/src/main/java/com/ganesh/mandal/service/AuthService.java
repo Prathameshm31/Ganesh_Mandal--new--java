@@ -37,10 +37,12 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(request.getUsername()).orElse(null);
+        User user = userRepository.findByUsername(request.getUsername()).orElse(null);
         if (user == null) {
-            user = userRepository.findByUsername(request.getUsername())
-                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+            user = userRepository.findByEmail(request.getUsername()).orElse(null);
+        }
+        if (user == null) {
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         if (Boolean.TRUE.equals(user.getAccountLocked())) {

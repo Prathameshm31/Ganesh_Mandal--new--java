@@ -277,6 +277,7 @@ public class MemberService {
                     .email(email).logoUrl(null).bannerUrl(null)
                     .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
                     .customMessage(loginDetails)
+                    .tempPassword(defaultPassword)
                     .build();
             eventPublisher.publishEvent(new NotificationEvent(this, req));
         } catch (Exception e) {

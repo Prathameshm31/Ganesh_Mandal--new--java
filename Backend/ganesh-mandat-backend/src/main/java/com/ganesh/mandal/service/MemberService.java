@@ -69,6 +69,7 @@ public class MemberService {
                     .firstLogin(true)
                     .failedLoginAttempts(0)
                     .accountLocked(false)
+                    .registrationSource("ADMIN")
                     .build();
             user = userRepository.save(user);
 
@@ -229,6 +230,7 @@ public class MemberService {
                 .roleId(roleId)
                 .username(member.getUser() != null ? member.getUser().getUsername() : null)
                 .roles(roles)
+                .registrationSource(member.getUser() != null ? member.getUser().getRegistrationSource() : null)
                 .createdAt(member.getCreatedAt())
                 .build();
     }

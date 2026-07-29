@@ -137,17 +137,13 @@ public class DataSeeder implements CommandLineRunner {
 
         List<String> userPermCodes = List.of(
             "DASHBOARD:VIEW",
-            "USERS:VIEW",
             "MURTI:VIEW",
             "SPONSORS:VIEW",
             "DONATIONS:VIEW",
             "DONATIONS:ADD",
             "PRASAD:VIEW",
-            "VOLUNTEERS:VIEW",
             "EVENTS:VIEW",
-            "REPORTS:VIEW",
-            "NOTIFICATIONS:VIEW",
-            "SETTINGS:VIEW"
+            "NOTIFICATIONS:VIEW"
         );
         for (Permission p : allPerms) {
             if (userPermCodes.contains(p.getPermissionCode())) {

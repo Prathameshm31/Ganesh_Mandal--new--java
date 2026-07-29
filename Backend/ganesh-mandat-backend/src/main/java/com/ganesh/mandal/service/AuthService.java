@@ -139,7 +139,7 @@ public class AuthService {
         passwordResetTokenRepository.save(resetToken);
 
         try {
-            String resetUrl = "http://localhost:3000/reset-password?token=" + token;
+            String resetUrl = "https://ganesh-mandal-new-react-tan.vercel.app/reset-password?token=" + token;
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(email);

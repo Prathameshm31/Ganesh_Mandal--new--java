@@ -2,13 +2,11 @@ package com.ganesh.mandal.service;
 
 import com.ganesh.mandal.dto.*;
 import com.ganesh.mandal.entity.*;
-import com.ganesh.mandal.event.NotificationEvent;
 import com.ganesh.mandal.exception.*;
 import com.ganesh.mandal.repository.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -33,9 +30,9 @@ public class AuthService {
     private final AuthorizationService authorizationService;
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender mailSender;
-    private final ApplicationEventPublisher eventPublisher;
     private final RoleRepository roleRepository;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -168,40 +165,9 @@ public class AuthService {
                 .message("Registration successful! Welcome to Hindavi Swarajya.")
                 .build();
 
-        sendWelcomeNotification(member, user);
+        memberService.publishRegistrationNotification(member, request.getPassword());
 
         return response;
-    }
-
-    private void sendWelcomeNotification(Member member, User user) {
-        try {
-            List<String> receivers = new ArrayList<>();
-            List<String> channels = new ArrayList<>();
-            if (user.getMobile() != null && !user.getMobile().isBlank()) {
-                receivers.add(user.getMobile());
-                channels.add("WhatsApp");
-            }
-            if (user.getEmail() != null && !user.getEmail().isBlank()) {
-                receivers.add(user.getEmail());
-                channels.add("Email");
-            }
-            if (receivers.isEmpty()) return;
-
-            NotificationRequest req = NotificationRequest.builder()
-                    .notificationType("Registration")
-                    .receivers(receivers)
-                    .channels(channels)
-                    .donorName(user.getName())
-                    .mobile(user.getMobile())
-                    .userId(member.getId())
-                    .email(user.getEmail())
-                    .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
-                    .customMessage("Welcome to Hindavi Swarajya! Your account has been created successfully.")
-                    .build();
-            eventPublisher.publishEvent(new NotificationEvent(this, req));
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome notification: " + e.getMessage());
-        }
     }
 
     @Transactional

@@ -270,13 +270,11 @@ public class MemberService {
                 receivers.add(email); channels.add("Email");
             }
             if (receivers.isEmpty()) return;
-            String loginDetails = "\n\nLogin Credentials:\nUsername: " + email + "\nPassword: " + defaultPassword;
             NotificationRequest req = NotificationRequest.builder()
                     .notificationType("Registration").receivers(receivers).channels(channels)
                     .donorName(member.getName()).mobile(mobile).userId(member.getId())
                     .email(email).logoUrl(null).bannerUrl(null)
                     .websiteUrl("https://ganesh-mandal-new-react-tan.vercel.app/")
-                    .customMessage(loginDetails)
                     .tempPassword(defaultPassword)
                     .build();
             eventPublisher.publishEvent(new NotificationEvent(this, req));

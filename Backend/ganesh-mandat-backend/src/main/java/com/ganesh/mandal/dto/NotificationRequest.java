@@ -34,4 +34,5 @@ public class NotificationRequest {
     private String activityTime;
     private String activityVenue;
     private String tempPassword;
+    private String receiptNumber;
 }

@@ -40,6 +40,7 @@ public class RoleService {
         return toDTO(role);
     }
 
+    @Transactional
     public RoleDTO updateRole(Long id, RoleDTO dto) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + id));

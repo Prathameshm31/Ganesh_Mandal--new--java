@@ -11,6 +11,12 @@ import java.util.List;
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
 
+    java.util.Optional<Member> findByMobile(String mobile);
+
+    java.util.Optional<Member> findByEmail(String email);
+
+    java.util.Optional<Member> findByUserId(Long userId);
+
     List<Member> findByNameContainingIgnoreCaseOrMobileContaining(String name, String mobile);
 
     long countByColony(String colony);
